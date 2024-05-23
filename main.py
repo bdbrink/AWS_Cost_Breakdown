@@ -44,9 +44,20 @@ df = pd.DataFrame(results)
 # Filter the DataFrame to include only CloudWatch related costs
 cloudwatch_df = df[df['Service'] == 'AmazonCloudWatch']
 
-# Example analysis: total cost by usage type for CloudWatch
-total_cost_by_usage_type = cloudwatch_df.groupby('UsageType')['Cost'].sum().reset_index()
-print(total_cost_by_usage_type)
+# Group similar usage types together and sum their costs
+cleaned_df = (
+    cloudwatch_df
+    .groupby('UsageType')
+    .agg({'Cost': 'sum'})
+    .reset_index()
+    .sort_values(by='Cost', ascending=False)
+)
 
-# Save the analysis to a CSV file
-total_cost_by_usage_type.to_csv('cloudwatch_cost_by_usage_type.csv', index=False)
+# Format the cost values for better readability
+cleaned_df['Cost'] = cleaned_df['Cost'].apply(lambda x: f"${x:,.2f}")
+
+# Print the cleaned and grouped DataFrame
+print(cleaned_df)
+
+# Save the cleaned analysis to a CSV file
+cleaned_df.to_csv('cloudwatch_cleaned_cost_by_usage_type.csv', index=False)
