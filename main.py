@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 ce_client = boto3.client('ce')
 
 # Function to get cost and usage data
-def get_cost_and_usage(start_date, end_date, granularity='MONTHLY', metrics=['BlendedCost'], group_by=[]):
+def get_cost_and_usage(start_date, end_date, granularity='DAILY', metrics=['BlendedCost'], group_by=[]):
     response = ce_client.get_cost_and_usage(
         TimePeriod={
             'Start': start_date,
@@ -18,9 +18,9 @@ def get_cost_and_usage(start_date, end_date, granularity='MONTHLY', metrics=['Bl
     )
     return response
 
-# Define the time period for the query (last month)
-end_date = datetime.utcnow().replace(day=1).strftime('%Y-%m-%d')
-start_date = (datetime.utcnow().replace(day=1) - timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')
+# Define the time period for the query (past week)
+end_date = datetime.utcnow().strftime('%Y-%m-%d')
+start_date = (datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')
 
 # Define the query parameters
 granularity = 'DAILY'
@@ -60,4 +60,4 @@ cleaned_df['Cost'] = cleaned_df['Cost'].apply(lambda x: f"${x:,.2f}")
 print(cleaned_df)
 
 # Save the cleaned analysis to a CSV file
-cleaned_df.to_csv('cloudwatch_cleaned_cost_by_usage_type.csv', index=False)
+cleaned_df.to_csv('cloudwatch_cleaned_cost_by_usage_type_new.csv', index=False)
