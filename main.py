@@ -20,7 +20,7 @@ def get_cost_and_usage(start_date, end_date, granularity='DAILY', metrics=['Blen
 
 # Define the time period for the query (past week)
 end_date = datetime.utcnow().strftime('%Y-%m-%d')
-start_date = (datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')
+start_date = (datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')
 
 # Define the query parameters
 granularity = 'DAILY'
