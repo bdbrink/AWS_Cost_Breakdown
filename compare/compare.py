@@ -55,8 +55,8 @@ cleaned_df = (
     .sort_values(by=['Date', 'Cost'], ascending=[True, False])
 )
 
-# Format the cost values for better readability
-cleaned_df['Cost'] = cleaned_df['Cost'].apply(lambda x: f"${x:,.2f}")
+# Ensure 'Date' column is in datetime format
+cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'])
 
 # Create a directory for previous results if it doesn't exist
 dir_name = 'previous_results'
@@ -72,8 +72,22 @@ cleaned_df.to_csv(new_file_path, index=False)
 # Load previous results if they exist
 if os.path.exists(prev_file_path):
     prev_df = pd.read_csv(prev_file_path)
-    prev_df['Date'] = pd.to_datetime(prev_df['Date'])
-    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'])
+    
+    # Ensure 'Date' column in previous results is in datetime format
+    prev_df['Date'] = pd.to_datetime(prev_df['Date'], errors='coerce')
+
+    # Check for any potential issues in date conversion
+    if prev_df['Date'].isnull().any():
+        print("Warning: Some dates in the previous results could not be converted and will be ignored in the comparison.")
+        prev_df = prev_df.dropna(subset=['Date'])
+
+    # Ensure 'Date' column in the new results is also in datetime format
+    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'], errors='coerce')
+
+    # Check for any potential issues in date conversion
+    if cleaned_df['Date'].isnull().any():
+        print("Warning: Some dates in the new results could not be converted and will be ignored in the comparison.")
+        cleaned_df = cleaned_df.dropna(subset=['Date'])
     
     # Compare new results with previous results
     comparison_df = pd.merge(
