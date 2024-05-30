@@ -21,7 +21,7 @@ def get_cost_and_usage(start_date, end_date, granularity='DAILY', metrics=['Blen
 
 # Define the time period for the query (past week)
 end_date = datetime.utcnow().strftime('%Y-%m-%d')
-start_date = (datetime.utcnow() - timedelta(days=3)).strftime('%Y-%m-%d')
+start_date = (datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')
 
 # Define the query parameters
 granularity = 'DAILY'
@@ -38,20 +38,21 @@ for result in response['ResultsByTime']:
         service = group['Keys'][0]
         usage_type = group['Keys'][1]
         amount = float(group['Metrics']['BlendedCost']['Amount'])
-        results.append({'Service': service, 'UsageType': usage_type, 'Cost': amount, 'TimePeriod': result['TimePeriod']})
+        date = result['TimePeriod']['Start']
+        results.append({'Date': date, 'Service': service, 'UsageType': usage_type, 'Cost': amount})
 
 df = pd.DataFrame(results)
 
 # Filter the DataFrame to include only CloudWatch related costs
 cloudwatch_df = df[df['Service'] == 'AmazonCloudWatch']
 
-# Group similar usage types together and sum their costs
+# Group similar usage types together and sum their costs by day
 cleaned_df = (
     cloudwatch_df
-    .groupby('UsageType')
+    .groupby(['Date', 'UsageType'])
     .agg({'Cost': 'sum'})
     .reset_index()
-    .sort_values(by='Cost', ascending=False)
+    .sort_values(by=['Date', 'Cost'], ascending=[True, False])
 )
 
 # Format the cost values for better readability
@@ -71,8 +72,17 @@ cleaned_df.to_csv(new_file_path, index=False)
 # Load previous results if they exist
 if os.path.exists(prev_file_path):
     prev_df = pd.read_csv(prev_file_path)
+    prev_df['Date'] = pd.to_datetime(prev_df['Date'])
+    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'])
+    
     # Compare new results with previous results
-    comparison_df = pd.merge(cleaned_df, prev_df, on='UsageType', suffixes=('_new', '_prev'), how='outer')
+    comparison_df = pd.merge(
+        cleaned_df, 
+        prev_df, 
+        on=['Date', 'UsageType'], 
+        suffixes=('_new', '_prev'), 
+        how='outer'
+    )
     comparison_df.fillna(0, inplace=True)
     print("Comparison of new and previous results:")
     print(comparison_df)
