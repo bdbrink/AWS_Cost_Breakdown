@@ -58,6 +58,9 @@ cleaned_df = (
 # Ensure 'Date' column is in datetime format
 cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'])
 
+# Format the cost values for better readability
+cleaned_df['Cost'] = cleaned_df['Cost'].apply(lambda x: f"${x:,.2f}")
+
 # Create a directory for previous results if it doesn't exist
 dir_name = 'previous_results'
 os.makedirs(dir_name, exist_ok=True)
@@ -106,6 +109,11 @@ if os.path.exists(prev_file_path):
             how='outer'
         )
         comparison_df.fillna(0, inplace=True)
+        
+        # Ensure cost values are formatted correctly
+        comparison_df['Cost_new'] = comparison_df['Cost_new'].apply(lambda x: f"${x:,.2f}" if isinstance(x, float) else x)
+        comparison_df['Cost_prev'] = comparison_df['Cost_prev'].apply(lambda x: f"${x:,.2f}" if isinstance(x, float) else x)
+        
         print("Comparison of new and previous results:")
         print(comparison_df)
     except Exception as e:
