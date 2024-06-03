@@ -71,35 +71,45 @@ cleaned_df.to_csv(new_file_path, index=False)
 
 # Load previous results if they exist
 if os.path.exists(prev_file_path):
-    prev_df = pd.read_csv(prev_file_path)
-    
-    # Ensure 'Date' column in previous results is in datetime format
-    prev_df['Date'] = pd.to_datetime(prev_df['Date'], errors='coerce')
-
-    # Check for any potential issues in date conversion
-    if prev_df['Date'].isnull().any():
-        print("Warning: Some dates in the previous results could not be converted and will be ignored in the comparison.")
-        prev_df = prev_df.dropna(subset=['Date'])
-
-    # Ensure 'Date' column in the new results is also in datetime format
-    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'], errors='coerce')
-
-    # Check for any potential issues in date conversion
-    if cleaned_df['Date'].isnull().any():
-        print("Warning: Some dates in the new results could not be converted and will be ignored in the comparison.")
-        cleaned_df = cleaned_df.dropna(subset=['Date'])
-    
-    # Compare new results with previous results
-    comparison_df = pd.merge(
-        cleaned_df, 
-        prev_df, 
-        on=['Date', 'UsageType'], 
-        suffixes=('_new', '_prev'), 
-        how='outer'
-    )
-    comparison_df.fillna(0, inplace=True)
-    print("Comparison of new and previous results:")
-    print(comparison_df)
+    try:
+        prev_df = pd.read_csv(prev_file_path)
+        
+        # Debugging: Print the columns of the previous DataFrame to inspect
+        print("Previous DataFrame columns:", prev_df.columns.tolist())
+        
+        # Check if 'Date' column exists
+        if 'Date' not in prev_df.columns:
+            raise KeyError("'Date' column not found in the previous results.")
+        
+        # Ensure 'Date' column in previous results is in datetime format
+        prev_df['Date'] = pd.to_datetime(prev_df['Date'], errors='coerce')
+        
+        # Check for any potential issues in date conversion
+        if prev_df['Date'].isnull().any():
+            print("Warning: Some dates in the previous results could not be converted and will be ignored in the comparison.")
+            prev_df = prev_df.dropna(subset=['Date'])
+        
+        # Ensure 'Date' column in the new results is also in datetime format
+        cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'], errors='coerce')
+        
+        # Check for any potential issues in date conversion
+        if cleaned_df['Date'].isnull().any():
+            print("Warning: Some dates in the new results could not be converted and will be ignored in the comparison.")
+            cleaned_df = cleaned_df.dropna(subset=['Date'])
+        
+        # Compare new results with previous results
+        comparison_df = pd.merge(
+            cleaned_df, 
+            prev_df, 
+            on=['Date', 'UsageType'], 
+            suffixes=('_new', '_prev'), 
+            how='outer'
+        )
+        comparison_df.fillna(0, inplace=True)
+        print("Comparison of new and previous results:")
+        print(comparison_df)
+    except Exception as e:
+        print(f"Error reading or processing previous results: {e}")
 else:
     print("No previous results to compare.")
 
