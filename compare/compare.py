@@ -111,9 +111,12 @@ if os.path.exists(prev_file_path):
         comparison_df.fillna(0, inplace=True)
         
         # Ensure cost values are formatted correctly
-        comparison_df['Cost_new'] = comparison_df['Cost_new'].apply(lambda x: f"${x:,.2f}" if isinstance(x, float) else x)
-        comparison_df['Cost_prev'] = comparison_df['Cost_prev'].apply(lambda x: f"${x:,.2f}" if isinstance(x, float) else x)
+        comparison_df['Cost_new'] = comparison_df['Cost_new'].apply(lambda x: f"${float(x):,.2f}" if isinstance(x, (float, int)) else x)
+        comparison_df['Cost_prev'] = comparison_df['Cost_prev'].apply(lambda x: f"${float(x):,.2f}" if isinstance(x, (float, int)) else x)
         
+        # Filter out rows where both costs are zero
+        comparison_df = comparison_df[(comparison_df['Cost_new'] != "$0.00") | (comparison_df['Cost_prev'] != "$0.00")]
+
         print("Comparison of new and previous results:")
         print(comparison_df)
     except Exception as e:
