@@ -98,7 +98,7 @@ if os.path.exists(prev_file_path):
         # Check for any potential issues in date conversion
         if cleaned_df['Date'].isnull().any():
             print("Warning: Some dates in the new results could not be converted and will be ignored in the comparison.")
-            cleaned_df = cleaned_df.dropna(subset=['Date'])
+            cleaned_df = cleaned_df.dropna(subset(['Date']))
         
         # Compare new results with previous results
         comparison_df = pd.merge(
@@ -114,8 +114,9 @@ if os.path.exists(prev_file_path):
         comparison_df['Cost_new'] = comparison_df['Cost_new'].apply(lambda x: f"${float(x):,.2f}" if isinstance(x, (float, int)) else x)
         comparison_df['Cost_prev'] = comparison_df['Cost_prev'].apply(lambda x: f"${float(x):,.2f}" if isinstance(x, (float, int)) else x)
         
-        # Filter out rows where both costs are zero
-        comparison_df = comparison_df[(comparison_df['Cost_new'] != "$0.00") | (comparison_df['Cost_prev'] != "$0.00")]
+        # Filter out rows where both costs are zero or less than $3
+        comparison_df = comparison_df[(comparison_df['Cost_new'].apply(lambda x: float(x.replace('$', '').replace(',', ''))) >= 3) |
+                                      (comparison_df['Cost_prev'].apply(lambda x: float(x.replace('$', '').replace(',', ''))) >= 3)]
 
         print("Comparison of new and previous results:")
         print(comparison_df)
